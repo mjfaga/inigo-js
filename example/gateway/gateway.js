@@ -1,7 +1,7 @@
 const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
 const { ApolloGateway, IntrospectAndCompose } = require("@apollo/gateway");
-const { InigoPlugin, InigoRemoteDataSource, InigoFetchGatewayInfo } = require("inigo.js");
+const { Inigo, InigoRemoteDataSource } = require("inigo.js");
 const { config } = require("dotenv");
 
 config();
@@ -31,39 +31,26 @@ class CustomRemoteDataSource extends InigoRemoteDataSource {
   }
 
   async onAfterReceiveResponse({ request, response , context }) {
-    return response // return response if it was modified
+    // place for custom handling of a subgraph response
+    return response
   }
 }
 
-function logHeadersAndOpPlugin() {
-  return {
-    requestDidStart: () => ({
-      async didResolveOperation(requestContext) {
-        console.log("headers: ", requestContext.request.http.headers)
-        console.log("operation: ", requestContext.operation.operation)
-      },
-    }),
-  };
-}
-
 (async () => {
-  // INIGO: execute InigoFetchGatewayInfo as early as possible and use the result as a param for your custom data source.
-  const info = await InigoFetchGatewayInfo();
+  // INIGO: create Inigo instance
+  const inigo = new Inigo();
 
   const gateway = new ApolloGateway({
     supergraphSdl: supergraphSdl,
     buildService(service) {
-      return new CustomRemoteDataSource(service, info, true) // INIGO: this is required to get sub-graph visibility.
+      return new CustomRemoteDataSource(service, inigo) // INIGO: this is required to get sub-graph visibility.
     }
   })
-
-  const inigo = InigoPlugin() // INIGO: this line creates the parent Inigo plugin instance, required for Inigo sub-graph to work.
 
   const server = new ApolloServer({
     gateway: gateway,
     plugins: [
-      inigo,
-      logHeadersAndOpPlugin(),
+      inigo.plugin(),
     ],
   });
 

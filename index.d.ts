@@ -17,45 +17,18 @@ export class InigoConfig extends Config {
 
 export function InigoPlugin(config?: Config): any;
 
-interface InigoError {
-  message: string;
-}
-
-export interface InigoAuthContext extends Record<string, any> {
-  readonly req: Record<string, any> & {
-    readonly inigo: {
-      ctx?: any;
-      jwt?: string;
-    }
-  }
-}
-
-export interface InigoProcessedContext extends Record<string, any> {
-  readonly inigo: {
-    readonly blocked: boolean;
-    readonly result: {
-      readonly status: string;
-      readonly errors: InigoError[]
-    };
-  }
-}
-
 export function version(): string;
 
-interface InigoSubGraphInfo {
-  name: string
-  label: string
-  url: string
-  token: string
+export class Inigo {
+  constructor(cfg?: Config);
+  plugin(): any;
 }
-interface InigoGatewayInfo {
-  [key: string]: InigoSubGraphInfo;
-}
-
-export function InigoFetchGatewayInfo(token?: string): Promise<InigoGatewayInfo>;
 
 export class InigoRemoteDataSource extends RemoteGraphQLDataSource {
-  constructor(server: ServiceEndpointDefinition, info?: InigoGatewayInfo, sdl?: boolean);
+  constructor(
+      server: ServiceEndpointDefinition,
+      info?: Inigo,
+      sdl?: boolean);
 
   onBeforeSendRequest?(options: GraphQLDataSourceProcessOptions): void | Promise<void>;
   onAfterReceiveResponse?(requestContext: Required<Pick<GatewayGraphQLRequestContext, 'request' | 'response' | 'context'>>): GatewayGraphQLResponse | Promise<GatewayGraphQLResponse>;
